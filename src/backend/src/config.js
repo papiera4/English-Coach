@@ -13,6 +13,10 @@ export const config = {
     baseUrl: process.env.LLM_BASE_URL || 'https://api.openai.com/v1',
     model: process.env.LLM_MODEL || 'gpt-4-turbo',
   },
+  azure: {
+    speechKey: process.env.AZURE_SPEECH_KEY,
+    speechRegion: process.env.AZURE_SPEECH_REGION,
+  },
   server: {
     port: process.env.PORT || 3001,
     env: process.env.NODE_ENV || 'development',

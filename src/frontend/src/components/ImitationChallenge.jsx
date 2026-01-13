@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Send } from 'lucide-react';
+import L1LogicGap from './L1LogicGap';
+import RhetoricalAnalysis from './RhetoricalAnalysis';
 
 export default function ImitationChallenge({ challenge, originalText, genre, accentMode, onFeedbackReceived }) {
   const [userImitation, setUserImitation] = useState('');
@@ -36,7 +38,8 @@ export default function ImitationChallenge({ challenge, originalText, genre, acc
 
   return (
     <div className="space-y-4">
-      <div className="bg-british-navy bg-opacity-5 rounded-lg p-4">
+      <div className="bg-british-navy bg-opacity-5 rounded-lg p-4 border-l-4 border-british-navy">
+        <div className="text-xs uppercase tracking-wider text-gray-600 mb-2 font-semibold">✍️ Writing Imitation Challenge</div>
         <p className="text-british-navy text-opacity-80 mb-3">{challenge.instruction}</p>
         <div className="bg-white rounded p-3 italic text-british-navy border-l-4 border-british-gold">
           {challenge.example}
@@ -66,6 +69,16 @@ export default function ImitationChallenge({ challenge, originalText, genre, acc
             <div className="text-3xl font-bold text-british-gold">{feedback.overallScore}</div>
             <div className="text-sm text-british-navy text-opacity-70">/10</div>
           </div>
+          
+          {/* L1 Logic Gap - NEW */}
+          {feedback.l1LogicGaps && feedback.l1LogicGaps.length > 0 && (
+             <L1LogicGap gaps={feedback.l1LogicGaps} />
+          )}
+
+          {/* Rhetorical Analysis - NEW */}
+          {feedback.rhetoricalAnalysis && feedback.rhetoricalAnalysis.length > 0 && (
+            <RhetoricalAnalysis analysis={feedback.rhetoricalAnalysis} />
+          )}
 
           <div>
             <h5 className="font-semibold text-british-navy mb-2">✅ Strengths</h5>

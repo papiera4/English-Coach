@@ -14,7 +14,7 @@ export default function AccentToggle({ accentMode, setAccentMode }) {
               : 'text-white hover:bg-white hover:bg-opacity-10'
           }`}
         >
-          🇬🇧 RP
+          UK RP
         </button>
         <button
           onClick={() => setAccentMode('general-american')}

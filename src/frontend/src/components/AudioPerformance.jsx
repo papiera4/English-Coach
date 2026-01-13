@@ -1,7 +1,8 @@
 import React from 'react';
 import { AlertCircle, CheckCircle, TrendingUp, Volume2 } from 'lucide-react';
+import SimpleTTSButton from './SimpleTTSButton';
 
-export default function AudioPerformance({ audio, accentMode }) {
+export default function AudioPerformance({ audio, accentMode, mood }) {
   // Support both old format (single sentence) and new format (multiple sentences)
   const sentences = audio.sentences || (audio.words ? [{
     sentence: audio.sentence,
@@ -88,13 +89,18 @@ export default function AudioPerformance({ audio, accentMode }) {
         <div key={sentenceIdx} className="border-l-4 border-british-gold pl-4 space-y-4">
           {/* Sentence Display */}
           <div className="bg-white rounded-lg p-4 border border-british-navy border-opacity-10">
-            <div className="flex items-start gap-2">
+            <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-british-gold bg-british-gold bg-opacity-10 px-2 py-1 rounded">
                 {sentenceIdx + 1}
               </span>
               <p className="text-lg text-british-navy italic font-serif flex-1">
                 "{sentenceData.sentence}"
               </p>
+              <SimpleTTSButton 
+                text={sentenceData.sentence} 
+                accentMode={accentMode}
+                mood={mood}
+              />
             </div>
           </div>
 

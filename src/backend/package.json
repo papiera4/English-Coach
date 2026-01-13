@@ -9,11 +9,12 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "axios": "^1.7.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "axios": "^1.7.7",
-    "js-yaml": "^4.1.0"
+    "express": "^4.19.2",
+    "js-yaml": "^4.1.0",
+    "microsoft-cognitiveservices-speech-sdk": "^1.47.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

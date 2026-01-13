@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { linguisticAnalysisAgent, imitationFeedbackAgent, detectAccentContext } from './llm.js';
+import { generateSpeech } from './tts.js';
 
 const router = express.Router();
 
@@ -188,6 +189,32 @@ router.post('/detect-accent', async (req, res) => {
   } catch (error) {
     console.error('Accent Detection Error:', error);
     res.status(500).json({ error: error.message || 'Accent detection failed' });
+  }
+});
+
+/**
+ * POST /api/tts
+ * Generate speech from text
+ */
+router.post('/tts', async (req, res) => {
+  try {
+    const { text, accentMode, mood } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+
+    const audioBuffer = await generateSpeech(text, accentMode, mood);
+
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': audioBuffer.length,
+    });
+    
+    res.send(audioBuffer);
+  } catch (error) {
+    console.error('TTS Error:', error);
+    res.status(500).json({ error: error.message || 'TTS generation failed' });
   }
 });
 

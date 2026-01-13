@@ -32,51 +32,68 @@ export class BookProcessor {
     console.log(`Loaded ${this.data.length} chapters.`);
   }
 
-  async processParagraphs(chapterIndex) {
+  async processParagraphs(chapterIndex, concurrency = 5) {
     const chapter = this.data[chapterIndex];
     const chapterDir = path.join(this.outputDir, `chapter_${chapter.id}`);
     await fs.mkdir(chapterDir, { recursive: true });
 
-    const results = [];
+    const results = new Array(chapter.paragraphs.length).fill(null);
     console.log(`Processing Chapter ${chapter.id} (${chapter.paragraphs.length} paragraphs)...`);
 
-    for (let i = 0; i < chapter.paragraphs.length; i++) {
-      const paragraph = chapter.paragraphs[i];
-      // Skip very short lines/dialogue to save tokens/time if needed, or process all.
-      if (paragraph.length < 20) continue; 
+    // Prepare tasks
+    const tasks = chapter.paragraphs.map((p, i) => ({ paragraph: p, index: i }));
 
-      const filename = path.join(chapterDir, `p_${i + 1}.json`);
-      
-      try {
-        // Check if exists to support resuming
+    // Worker function
+    const worker = async () => {
+      while (tasks.length > 0) {
+        const task = tasks.shift();
+        if (!task) break;
+        const { paragraph, index } = task;
+
+        if (paragraph.length < 20) continue;
+
+        const filename = path.join(chapterDir, `p_${index + 1}.json`);
+
         try {
-          await fs.access(filename);
-          console.log(`  Skipping Paragraph ${i + 1} (already exists)`);
-          const existing = JSON.parse(await fs.readFile(filename, 'utf8'));
-          results.push(existing);
-          continue;
-        } catch {}
+          // Check if exists to support resuming
+          try {
+            await fs.access(filename);
+            console.log(`  Skipping Paragraph ${index + 1} (already exists)`);
+            const existing = JSON.parse(await fs.readFile(filename, 'utf8'));
+            results[index] = existing;
+            continue;
+          } catch {}
 
-        console.log(`  Analyzing Paragraph ${i + 1}...`);
-        const analysis = await linguisticAnalysisAgent(paragraph);
-        
-        const result = {
-          id: i + 1,
-          text: paragraph,
-          analysis
-        };
+          console.log(`  Analyzing Paragraph ${index + 1}...`);
+          const analysis = await linguisticAnalysisAgent(paragraph);
 
-        await fs.writeFile(filename, JSON.stringify(result, null, 2));
-        results.push(result);
-        
-        // Rate limit protection
-        await new Promise(resolve => setTimeout(resolve, 1000));
+          const result = {
+            id: index + 1,
+            text: paragraph,
+            analysis
+          };
 
-      } catch (error) {
-        console.error(`  Error in P${i + 1}:`, error.message);
+          await fs.writeFile(filename, JSON.stringify(result, null, 2));
+          results[index] = result;
+
+          // Rate limit protection
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+        } catch (error) {
+          console.error(`  Error in P${index + 1}:`, error.message);
+        }
       }
+    };
+
+    // Run workers
+    const activeWorkers = [];
+    const numWorkers = Math.min(concurrency, tasks.length);
+    for (let i = 0; i < numWorkers; i++) {
+        activeWorkers.push(worker());
     }
-    return results;
+    await Promise.all(activeWorkers);
+
+    return results.filter(r => r !== null);
   }
 
   async processChapter(chapterIndex, paragraphAnalyses) {
@@ -109,17 +126,31 @@ export class BookProcessor {
     
     let prevAnalysis = null;
     const chaptersToProcess = limitChapters || this.data.length;
+    
+    // Store inter-chapter promises to await them at the end
+    const backgroundTasks = [];
 
     for (let i = 0; i < chaptersToProcess; i++) {
       const paragraphResults = await this.processParagraphs(i);
       const chapterAnalysis = await this.processChapter(i, paragraphResults);
       
       if (i > 0 && prevAnalysis) {
-        await this.processInterChapter(i - 1, i, prevAnalysis, chapterAnalysis);
+        // Run inter-chapter analysis concurrently with next steps
+        // Capture specific values for the async closure
+        const prev = prevAnalysis;
+        const curr = chapterAnalysis;
+        const idxPrev = i - 1;
+        const idxCurr = i;
+
+        const task = this.processInterChapter(idxPrev, idxCurr, prev, curr)
+            .catch(err => console.error(`Background Inter-Chapter Error (${idxPrev+1}->${idxCurr+1}):`, err));
+        backgroundTasks.push(task);
       }
       
       prevAnalysis = chapterAnalysis;
     }
+    
+    await Promise.all(backgroundTasks);
     console.log('Book processing complete.');
   }
 }

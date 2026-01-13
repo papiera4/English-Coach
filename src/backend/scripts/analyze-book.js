@@ -32,12 +32,16 @@ for (let i = 2; i < args.length; i++) {
 
 // Resolve paths relative to where command is run or absolute
 const resolvedInput = path.resolve(inputFile);
-const resolvedOutput = path.resolve(outputDir);
+
+// Extract book name from input file path to create a subdirectory
+const bookName = path.parse(resolvedInput).name;
+const resolvedOutput = path.resolve(outputDir, bookName);
 
 async function main() {
   console.log('Starting Book Analysis...');
   console.log('Input:', resolvedInput);
-  console.log('Output:', resolvedOutput);
+  console.log('Book Name:', bookName);
+  console.log('Output Directory:', resolvedOutput);
   console.log('Split Regex:', chapterRegex);
 
   const processor = new BookProcessor(resolvedInput, resolvedOutput, {
