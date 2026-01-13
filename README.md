@@ -1,4 +1,4 @@
-# English Coach 🇬🇧
+# English Coach
 
 An advanced web application for mastering English as a C1/C2 level learner. Combines linguistic analysis, accent coaching (Modern RP vs. General American), and interactive imitation challenges powered by AI.
 
