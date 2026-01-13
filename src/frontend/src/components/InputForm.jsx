@@ -17,7 +17,7 @@ export default function InputForm({ onSubmit, loading }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Paste your text here... Can be a sentence, paragraph, or dialogue."
-        className="w-full h-64 p-4 border border-british-navy border-opacity-20 rounded-lg focus:outline-none focus:ring-2 focus:ring-british-gold focus:ring-opacity-50 resize-none"
+        className="w-full h-32 p-4 font-serif text-lg text-british-navy placeholder:text-british-navy/30 bg-white/50 border border-british-navy border-opacity-20 rounded-lg focus:outline-none focus:ring-2 focus:ring-british-gold focus:ring-opacity-50 resize-none transition-all"
       />
       
       <div className="text-sm text-british-navy text-opacity-60">
