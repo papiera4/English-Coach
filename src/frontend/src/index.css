@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  @apply antialiased;
+}
+
+body {
+  @apply bg-british-cream text-british-navy font-sans;
+}
+
+.glass-effect {
+  @apply bg-white bg-opacity-80 backdrop-blur-md border border-white border-opacity-20;
+}
+
+.british-gradient {
+  background: linear-gradient(135deg, #1a3a52 0%, #2a5a7a 100%);
+}
