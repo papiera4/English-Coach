@@ -3,8 +3,10 @@ import { PromptService } from './services/PromptService.js';
 import { BookService } from './services/BookService.js';
 import { LLMService } from './services/LLMService.js';
 import { TTSService } from './services/TTSService.js';
+import { SpeechService } from './services/SpeechService.js';
 import { BookController } from './controllers/BookController.js';
 import { AnalysisController } from './controllers/AnalysisController.js';
+import { AudioController } from './controllers/AudioController.js';
 
 type ServiceMap = {
     'config': AppConfig;
@@ -12,8 +14,10 @@ type ServiceMap = {
     'bookService': BookService;
     'llmService': LLMService;
     'ttsService': TTSService;
+    'speechService': SpeechService;
     'bookController': BookController;
     'analysisController': AnalysisController;
+    'audioController': AudioController;
 };
 
 class Container {
@@ -52,12 +56,18 @@ class Container {
     const ttsService = new TTSService(config);
     this.register('ttsService', ttsService);
 
+    const speechService = new SpeechService(config);
+    this.register('speechService', speechService);
+
     // 3. Controllers
     const bookController = new BookController(bookService);
     this.register('bookController', bookController);
 
     const analysisController = new AnalysisController(llmService, ttsService);
     this.register('analysisController', analysisController);
+
+    const audioController = new AudioController(speechService);
+    this.register('audioController', audioController);
 
     console.log('✅ Dependency Injection Container Initialized');
   }

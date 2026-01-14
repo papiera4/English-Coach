@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, CheckCircle, TrendingUp, Volume2 } from 'lucide-react';
 import SimpleTTSButton from './SimpleTTSButton';
+import VoiceRecorder from './VoiceRecorder';
 
 export default function AudioPerformance({ audio, accentMode, mood }) {
   // Guard clause for missing data
@@ -155,6 +156,9 @@ export default function AudioPerformance({ audio, accentMode, mood }) {
               </div>
             </div>
           )}
+
+          {/* Voice Recorder Integration */}
+          <VoiceRecorder referenceText={sentenceData.sentence} />
         </div>
       ))}
 

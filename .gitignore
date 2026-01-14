@@ -6,6 +6,7 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.venv/
 
 # OS files
 .DS_Store
@@ -34,3 +35,4 @@ data/
 *.tmp
 temp/
 .cache/
+test.*

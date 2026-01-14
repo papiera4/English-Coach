@@ -14,7 +14,7 @@ system: |
           "words": [
              { "word": "word", "stress": "primary|secondary|unstressed", "pitch": "high|mid|low|rising|falling" }
           ],
-          "intonationVisual": "Use arrows (e.g. ↗ ↘ →) to visualize the melody.",
+          "intonationVisual": "Use arrows (e.g. ↗ ↘ →) to visualize the melody of the ENTIRE sentence. Do NOT use ellipses (...) or truncate.",
           "stressPattern": "Visual pattern (e.g. • ◦ • ◦)",
           "ipaTranscription": "IPA transcription matching the {{ACCENT_MODE}}"
         }
