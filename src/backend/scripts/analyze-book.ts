@@ -1,6 +1,8 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { BookProcessor } from '../src/processors/bookProcessor.js';
+import { container } from '../src/Container.js';
+import { LLMService } from '../src/services/LLMService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +22,7 @@ const args = process.argv.slice(2);
 if (args.length < 2) showUsage();
 
 const [inputFile, outputDir] = args;
-let limit = null;
+let limit: number | null = null;
 let chapterRegex = /Chapter \d+/;
 let skipPreamble = true;
 
@@ -38,6 +40,9 @@ const bookName = path.parse(resolvedInput).name;
 const resolvedOutput = path.resolve(outputDir, bookName);
 
 async function main() {
+  await container.init(); // Initialize DI
+  const llmService = container.get('llmService') as LLMService;
+
   console.log('Starting Book Analysis...');
   console.log('Input:', resolvedInput);
   console.log('Book Name:', bookName);
@@ -47,7 +52,7 @@ async function main() {
   const processor = new BookProcessor(resolvedInput, resolvedOutput, {
       chapterRegex,
       skipPreamble
-  });
+  }, llmService);
   
   await processor.run(limit); 
 }

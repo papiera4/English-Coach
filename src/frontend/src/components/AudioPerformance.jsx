@@ -3,6 +3,9 @@ import { AlertCircle, CheckCircle, TrendingUp, Volume2 } from 'lucide-react';
 import SimpleTTSButton from './SimpleTTSButton';
 
 export default function AudioPerformance({ audio, accentMode, mood }) {
+  // Guard clause for missing data
+  if (!audio) return null;
+
   // Support both old format (single sentence) and new format (multiple sentences)
   const sentences = audio.sentences || (audio.words ? [{
     sentence: audio.sentence,

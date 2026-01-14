@@ -2,6 +2,8 @@ import React from 'react';
 import { Lightbulb } from 'lucide-react';
 
 export default function LexicalPrecision({ keywords }) {
+  if (!keywords || !Array.isArray(keywords)) return null;
+  
   return (
     <div className="space-y-4">
       {keywords.map((item, idx) => (

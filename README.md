@@ -25,9 +25,9 @@ An advanced web application for mastering English as a C1/C2 level learner. Comb
 ## Tech Stack
 
 **Backend**
-- Node.js + Express.js
+- Node.js + Express.js + **TypeScript**
 - OpenAI GPT-4 Turbo (or compatible LLM)
-- Agentic pattern architecture with multi-stage processing
+- Agentic pattern architecture with **Concurrent Analysis Pipeline**
 
 **Frontend**
 - React 18
@@ -42,12 +42,16 @@ English-Coach/
 ├── src/
 │   ├── backend/
 │   │   ├── src/
-│   │   │   ├── config.js          # Environment & LLM configuration
-│   │   │   ├── llm.js             # Agentic AI orchestration
-│   │   │   ├── routes.js          # API endpoints
-│   │   │   └── index.js           # Express server
+│   │   │   ├── config/            # Configuration classes
+│   │   │   ├── controllers/       # API Request Handlers
+│   │   │   ├── services/          # Business logic, LLM, & Prompt services
+│   │   │   ├── prompts/           # Modular YAML prompts (core, lexis, prosody)
+│   │   │   ├── routes/            # API definitions
+│   │   │   ├── app.ts             # Express app configuration
+│   │   │   └── index.ts           # Server entry point
 │   │   ├── .env.example           # Copy to .env and fill in your LLM credentials
-│   │   └── package.json
+│   │   ├── package.json
+│   │   └── tsconfig.json
 │   └── frontend/
 │       ├── src/
 │       │   ├── components/        # React components
@@ -226,11 +230,20 @@ Health check endpoint.
 
 ## Architecture & Design Patterns
 
+### Concurrent Analysis Pipeline
+The backend optimizes performance by using a **concurrent processing model**. When a text is submitted, the system splits the workload into three parallel streams:
+
+1.  **Core Analysis**: Evaluates Genre, Atmosphere, and Subtext.
+2.  **Lexical Analysis**: Focuses on Vocabulary, Collocations, and Register.
+3.  **Prosody Analysis**: Analyzes Phonetics, Intonation, and Stress.
+
+These streams are executed simultaneously via `Promise.all`, significantly reducing the wait time for the user compared to a monolithic sequential prompt.
+
 ### Agentic AI Pattern
 The system uses a **multi-stage agentic pattern** for intelligent analysis:
 
 1. **Detection Stage**: Analyze text to detect accent context and genre
-2. **Analysis Stage**: Multi-dimensional linguistic breakdown
+2. **Analysis Stage**: Multi-dimensional linguistic breakdown (Concurrent)
 3. **Feedback Stage**: Interactive evaluation of user attempts
 
 Each stage builds on the previous one, creating intelligent, context-aware coaching.
@@ -296,10 +309,7 @@ colors: {
 
 - [ ] Audio upload & pronunciation analysis
 - [ ] Speaking rate calculation
-- [ ] Word stress pattern visualization
 - [ ] Semantic chunking for longer documents
-- [ ] User progress tracking & spaced repetition
-- [ ] Collaborative pronunciation feedback (community mode)
 
 ## License
 

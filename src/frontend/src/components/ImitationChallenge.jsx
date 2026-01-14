@@ -8,6 +8,8 @@ export default function ImitationChallenge({ challenge, originalText, genre, acc
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  if (!challenge) return null;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userImitation.trim()) return;
@@ -72,7 +74,11 @@ export default function ImitationChallenge({ challenge, originalText, genre, acc
           
           {/* L1 Logic Gap - NEW */}
           {feedback.l1LogicGaps && feedback.l1LogicGaps.length > 0 && (
-             <L1LogicGap gaps={feedback.l1LogicGaps} />
+             <div className="space-y-4">
+                {feedback.l1LogicGaps.map((gap, index) => (
+                  <L1LogicGap key={index} gap={gap} />
+                ))}
+             </div>
           )}
 
           {/* Rhetorical Analysis - NEW */}
