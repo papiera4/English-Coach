@@ -1,88 +1,91 @@
-import fs from 'fs/promises';
 import path from 'path';
+import Database from 'better-sqlite3';
 import { AppConfig } from '../config/AppConfig.js';
 
 export interface Paragraph {
     id: number;
     text: string;
-    analysis: any; // Ideally this should be a stronger type based on LLM output
+    analysis: any;
+    audioUrl?: string;
 }
 
 export class BookService {
-  private dataDir: string;
+  private db: Database.Database;
 
   constructor(config: AppConfig) {
-    this.dataDir = config.paths.dataDir;
+    const dbPath = path.join(config.paths.dataDir, 'english_coach.db');
+    // Open in Read-Only mode to prevent accidental writes from the API
+    try {
+        this.db = new Database(dbPath, { readonly: true, fileMustExist: false });
+    } catch (e) {
+        // If file doesn't exist, better-sqlite3 throws. 
+        // In dev, it might not exist yet. Handle gracefully?
+        console.error("Failed to open database:", dbPath, e);
+        // We create a dummy db or let it crash? 
+        // Better to allow app to start even if DB is broken, but calls will fail.
+        this.db = new Database(':memory:'); 
+    }
   }
 
   async listBooks(): Promise<string[]> {
     try {
-      await fs.access(this.dataDir);
-    } catch {
-      console.warn(`Data directory not found: ${this.dataDir}`);
-      return [];
+        const rows = this.db.prepare('SELECT DISTINCT book_id FROM paragraphs').all() as { book_id: string }[];
+        return rows.map(r => r.book_id || '1984');
+    } catch (error) {
+        console.error("Error querying books:", error);
+        return [];
     }
-
-    const files = await fs.readdir(this.dataDir);
-    return files.filter(f => !f.startsWith('.'));
   }
 
   async getChapters(bookId: string): Promise<string[]> {
-    this._validatePath(bookId);
-    
-    const bookPath = path.join(this.dataDir, bookId);
     try {
-        await fs.access(bookPath);
-    } catch {
+        // Handle case where book_id might be missing in older rows
+        const rows = this.db.prepare('SELECT DISTINCT chapter FROM paragraphs WHERE book_id = ?').all(bookId) as { chapter: string }[];
+        
+        return rows.map(r => r.chapter).sort((a, b) => {
+            const extractNum = (s: string) => {
+                const match = s ? s.match(/\d+/) : null;
+                return match ? parseInt(match[0]) : 0;
+            };
+            return extractNum(a) - extractNum(b);
+        });
+    } catch (error) {
+        console.error("Error querying chapters:", error);
         return [];
     }
-
-    const files = await fs.readdir(bookPath);
-    
-    return files
-      .filter(f => f.startsWith('chapter_'))
-      .sort((a, b) => {
-         const partsA = a.split('_');
-         const partsB = b.split('_');
-         const numA = partsA.length > 1 ? parseInt(partsA[1]) : 0;
-         const numB = partsB.length > 1 ? parseInt(partsB[1]) : 0;
-         return numA - numB;
-      });
   }
 
   async getParagraphs(bookId: string, chapterId: string): Promise<Paragraph[]> {
-    this._validatePath(bookId);
-    this._validatePath(chapterId);
-
-    const chapterPath = path.join(this.dataDir, bookId, chapterId);
-    
     try {
-        await fs.access(chapterPath);
-    } catch {
+        const rows = this.db.prepare(`
+            SELECT id, text, audio_path, analysis_json 
+            FROM paragraphs 
+            WHERE book_id = ? AND chapter = ?
+            ORDER BY id ASC
+        `).all(bookId, chapterId) as any[];
+
+        return rows.map(row => ({
+            id: row.id,
+            text: row.text,
+            analysis: row.analysis_json ? JSON.parse(row.analysis_json) : null,
+            audioUrl: row.audio_path ? `/content/${row.audio_path}` : undefined
+        }));
+    } catch (error) {
+        console.error("Error querying paragraphs:", error);
         return [];
     }
-
-    const files = await fs.readdir(chapterPath);
-    const paragraphs: Paragraph[] = [];
-
-    for (const file of files) {
-      if (file.startsWith('p_') && file.endsWith('.json')) {
-         const content = await fs.readFile(path.join(chapterPath, file), 'utf8');
-         try {
-           const json = JSON.parse(content) as Paragraph;
-           paragraphs.push(json);
-         } catch (e) {
-           console.error(`Error parsing ${file}`, e);
-         }
-      }
-    }
-
-    return paragraphs.sort((a, b) => a.id - b.id);
   }
 
-  private _validatePath(segment: string): void {
-    if (segment.includes('..') || segment.includes('/') || segment.includes('\\')) {
-        throw new Error(`Invalid path segment: ${segment}`);
-    }
+  async getChapterAnalysis(bookId: string, chapterId: string): Promise<any> {
+      try {
+          const row = this.db.prepare(`
+              SELECT analysis_json FROM chapters WHERE book_id = ? AND title = ?
+          `).get(bookId, chapterId) as { analysis_json: string } | undefined;
+          
+          return row ? JSON.parse(row.analysis_json) : null;
+      } catch (error) {
+          console.error("Error querying chapter analysis:", error);
+          return null;
+      }
   }
 }

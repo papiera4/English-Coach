@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Book, FileText, ChevronRight, Library, BookOpen } from 'lucide-react';
 
-export default function BookBrowser({ onSelectContent }) {
+export default function BookBrowser({ onSelectContent, onReadChapter }) {
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [paragraphs, setParagraphs] = useState([]);
+  const [chapterAnalysis, setChapterAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // Load books on mount
@@ -53,6 +54,7 @@ export default function BookBrowser({ onSelectContent }) {
       const data = await res.json();
       if (data.success) {
         setParagraphs(data.paragraphs);
+        setChapterAnalysis(data.chapterAnalysis);
       }
     } catch (e) { console.error(e); }
     setLoading(false);
@@ -138,9 +140,17 @@ export default function BookBrowser({ onSelectContent }) {
                 </div>
             ) : (
                 <div>
-                     <h3 className="px-4 py-3 text-[10px] font-bold text-british-navy uppercase opacity-50 sticky top-0 bg-white/95 backdrop-blur-sm z-10 border-b border-british-navy/5">
-                        Passages
-                    </h3>
+                     <div className="px-4 py-3 sticky top-0 bg-white/95 backdrop-blur-sm z-10 border-b border-british-navy/5 flex justify-between items-center">
+                        <h3 className="text-[10px] font-bold text-british-navy uppercase opacity-50">
+                            Passages
+                        </h3>
+                        <button 
+                            onClick={() => onReadChapter && onReadChapter(paragraphs, chapterAnalysis)}
+                            className="text-[10px] bg-british-gold text-white px-2 py-1 rounded hover:bg-opacity-90 transition-all font-semibold uppercase tracking-wider"
+                        >
+                            Read Full Chapter
+                        </button>
+                    </div>
                     <div className="divide-y divide-british-navy divide-opacity-5">
                     {loading && paragraphs.length === 0 ? (
                         <div className="p-8 text-center text-british-navy text-opacity-50 text-sm italic">

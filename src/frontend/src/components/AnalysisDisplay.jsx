@@ -17,6 +17,7 @@ export default function AnalysisDisplay({ analysis, accentMode, currentText }) {
     );
   }
 
+  const { audioUrl } = analysis;
   const { 
     genre, 
     atmosphere, 
@@ -35,6 +36,14 @@ export default function AnalysisDisplay({ analysis, accentMode, currentText }) {
       <SectionCard title="Original Text" icon="📄" defaultOpen={true}>
         <div className="p-4 bg-white rounded-lg shadow-sm">
            <p className="text-british-navy text-lg leading-relaxed font-serif whitespace-pre-wrap">{currentText}</p>
+           {audioUrl && (
+             <div className="mt-4 pt-3 border-t border-gray-100">
+               <div className="flex items-center gap-3">
+                 <span className="text-xs uppercase tracking-wider text-gray-500 font-semibold">Narrator Audio</span>
+                 <audio controls src={audioUrl} className="flex-1 h-8 focus:outline-none" />
+               </div>
+             </div>
+           )}
         </div>
       </SectionCard>
 

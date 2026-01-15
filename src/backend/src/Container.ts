@@ -66,7 +66,7 @@ class Container {
     const analysisController = new AnalysisController(llmService, ttsService);
     this.register('analysisController', analysisController);
 
-    const audioController = new AudioController(speechService);
+    const audioController = new AudioController(speechService, llmService);
     this.register('audioController', audioController);
 
     console.log('✅ Dependency Injection Container Initialized');

@@ -78,13 +78,13 @@ export class AnalysisController {
 
   async tts(req: Request, res: Response) {
     try {
-      const { text, accentMode, mood } = req.body;
+      const { text, accentMode, mood, gender } = req.body;
 
       if (!text) {
         return res.status(400).json({ error: 'Text is required' });
       }
 
-      const audioBuffer = await this.ttsService.generateSpeech(text, accentMode, mood);
+      const audioBuffer = await this.ttsService.generateSpeech(text, accentMode, mood, gender);
 
       res.set({
         'Content-Type': 'audio/mpeg',
@@ -111,4 +111,5 @@ export class AnalysisController {
           res.status(500).json({ error: error.message });
       }
   }
+
 }

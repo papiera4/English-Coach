@@ -29,8 +29,13 @@ export class BookController {
     try {
         const bookId = req.params.bookId as string;
         const chapterId = req.params.chapterId as string;
-        const paragraphs = await this.bookService.getParagraphs(bookId, chapterId);
-        res.json({ success: true, paragraphs });
+        
+        const [paragraphs, chapterAnalysis] = await Promise.all([
+            this.bookService.getParagraphs(bookId, chapterId),
+            this.bookService.getChapterAnalysis(bookId, chapterId)
+        ]);
+        
+        res.json({ success: true, paragraphs, chapterAnalysis });
     } catch (error) {
         console.error('Error listing paragraphs:', error);
         res.status(500).json({ error: 'Failed to list paragraphs' });

@@ -1,14 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Loader2, Volume2 } from 'lucide-react';
 
-export default function SimpleTTSButton({ text, accentMode, mood }) {
+export default function SimpleTTSButton({ text, accentMode, mood, gender, audioUrl: propAudioUrl, autoPlay }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
+  const [generatedAudioUrl, setGeneratedAudioUrl] = useState(null);
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const audioRef = useRef(null);
 
+  const activeAudioUrl = propAudioUrl || generatedAudioUrl;
+
   const handlePlay = async (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
 
     // If already playing, stop
     if (isPlaying) {
@@ -19,12 +22,24 @@ export default function SimpleTTSButton({ text, accentMode, mood }) {
       setIsPlaying(false);
       return;
     }
+    
+    await playAudio();
+  };
 
-    // If audio exists, play it
-    if (audioUrl) {
-      if (audioRef.current) {
-        audioRef.current.play();
+  const playAudio = async () => {
+      // If audio exists, play it
+    if (activeAudioUrl) {
+      if (!audioRef.current || (audioRef.current.src !== activeAudioUrl && !audioRef.current.src.endsWith(activeAudioUrl))) {
+        const audio = new Audio(activeAudioUrl);
+        audio.onended = () => setIsPlaying(false);
+        audioRef.current = audio;
+      }
+      
+      try {
+        await audioRef.current.play();
         setIsPlaying(true);
+      } catch (err) {
+        setIsPlaying(false);
       }
       return;
     }
@@ -38,14 +53,15 @@ export default function SimpleTTSButton({ text, accentMode, mood }) {
         body: JSON.stringify({ 
           text, 
           accentMode, 
-          mood: mood || '' 
+          mood: mood || '',
+          gender: gender || 'female'
         }),
       });
 
       if (response.ok) {
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
-        setAudioUrl(url);
+        setGeneratedAudioUrl(url);
         
         const audio = new Audio(url);
         audioRef.current = audio;
@@ -59,7 +75,14 @@ export default function SimpleTTSButton({ text, accentMode, mood }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+      if (autoPlay && !hasAutoPlayed && text) {
+          setHasAutoPlayed(true);
+          playAudio();
+      }
+  }, [autoPlay, text, hasAutoPlayed]);
 
   return (
     <button

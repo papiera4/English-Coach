@@ -1,6 +1,15 @@
 import axios, { AxiosInstance } from 'axios';
+import FormData from 'form-data';
 import { AppConfig } from '../config/AppConfig.js';
 import { PromptService } from './PromptService.js';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+
+// Set ffmpeg path
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 interface LLMResponseFormat {
     type: 'json_object' | 'text';
@@ -91,6 +100,72 @@ export class LLMService {
     }
   }
 
+  async transcribeAudio(audioBuffer: Buffer): Promise<string> {
+    const tempInput = path.join(os.tmpdir(), `input_${Date.now()}.webm`);
+    const tempOutput = path.join(os.tmpdir(), `output_${Date.now()}.wav`);
+
+    try {
+        // Write buffer to temp file
+        fs.writeFileSync(tempInput, audioBuffer);
+
+        // Convert WebM -> WAV using ffmpeg
+        // This fixes "Could not determine audio duration" (bad webm header) 
+        // and "Unsupported file type" (api restrictions)
+        await new Promise<void>((resolve, reject) => {
+            ffmpeg(tempInput)
+                .toFormat('wav')
+                .on('error', (err) => reject(err))
+                .on('end', () => resolve())
+                .save(tempOutput);
+        });
+
+        // Read the converted file
+        const convertedBuffer = fs.readFileSync(tempOutput);
+
+        const formData = new FormData();
+        formData.append('file', convertedBuffer, { filename: 'recording.wav', contentType: 'audio/wav' });
+        formData.append('model', 'whisper-large-v3-turbo');
+        formData.append('language', 'en');
+        
+        // Ensure we strictly use the /v1/audio/transcriptions endpoint
+        let baseUrl = this.config.llm.baseUrl;
+        if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+        
+        const response = await axios.post(`${baseUrl}/audio/transcriptions`, formData, {
+            headers: {
+                'Authorization': `Bearer ${this.config.llm.apiKey}`,
+                ...formData.getHeaders()
+            }
+        });
+        
+        return response.data.text;
+    } catch (error: any) {
+        console.error("Transcription Failed Details:", JSON.stringify(error.response?.data || {}, null, 2));
+        throw error;
+    } finally {
+        // Cleanup temp files
+        if (fs.existsSync(tempInput)) fs.unlinkSync(tempInput);
+        if (fs.existsSync(tempOutput)) fs.unlinkSync(tempOutput);
+    }
+  }
+
+  async evaluateSpeaking(transcription: string, question: string): Promise<any> {
+    let prompt = this.promptService.getSpeakingEvaluationSystemPrompt();
+    prompt = prompt.replace('{{transcription}}', transcription)
+                   .replace('{{question}}', question);
+
+    // Ensure we handle potential formatting issues if keys were missing in yaml
+    // but here we know the keys are {{transcription}} and {{question}}
+    
+    const messages: ChatMessage[] = [
+        { role: 'system', content: prompt },
+        { role: 'user', content: "Please evaluate the response based on the instructions above." }
+    ];
+
+    return this._chatCompletion(messages);
+  }
+
+
   /**
    * Performs inter-chapter analysis
    */
@@ -115,10 +190,13 @@ export class LLMService {
    */
   async analyzeChapter(chapterText: string, paragraphAnalyses: any[]): Promise<any> {
     // Summarize linguistic data to avoid token overflow
-    const linguisticSummary = paragraphAnalyses.map(p => ({
-      mood: p.analysis.atmosphere.mood,
-      themes: p.analysis.genre.type
-    })).slice(0, 20); // Sample first 20 for context
+    const linguisticSummary = paragraphAnalyses.map(p => {
+        const analysis = p.analysis || p; // Handle both wrapped and direct analysis objects
+        return {
+            mood: analysis.atmosphere?.mood,
+            themes: analysis.genre?.type
+        };
+    }).slice(0, 20); // Sample first 20 for context
 
     const systemPrompt = this.promptService.getChapterAnalysisSystemPrompt();
     const messages: ChatMessage[] = [

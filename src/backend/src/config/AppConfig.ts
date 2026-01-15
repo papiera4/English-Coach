@@ -44,7 +44,7 @@ export class AppConfig {
       env: process.env.NODE_ENV || 'development',
     };
     this.paths = {
-        dataDir: path.resolve(projectRoot, 'data/processed'),
+        dataDir: path.resolve(projectRoot, 'data'),
         promptsDir: path.resolve(__dirname, '../prompts'),
     };
   }

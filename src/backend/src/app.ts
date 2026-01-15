@@ -14,6 +14,9 @@ export const createApp = async (): Promise<Express> => {
     app.use(cors());
     app.use(express.json({ limit: '10mb' }));
 
+    // Serve static content (audio, etc.)
+    app.use('/content', express.static(config.paths.dataDir));
+
     // Routes
     app.use('/api', createApiRouter());
 

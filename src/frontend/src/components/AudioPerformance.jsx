@@ -104,6 +104,7 @@ export default function AudioPerformance({ audio, accentMode, mood }) {
                 text={sentenceData.sentence} 
                 accentMode={accentMode}
                 mood={mood}
+                audioUrl={sentenceData.audioUrl}
               />
             </div>
           </div>

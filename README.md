@@ -1,13 +1,11 @@
 # English Coach
 
-Advanced English training for C1/C2 learners, featuring linguistic analysis and real-time pronunciation assessment.
+Advanced English training for C1/C2 learners, featuring:
 
-## Features
-
-- **Linguistic Analysis**: Genre, subtext, and lexical precision (LLM-powered).
-- **Voice Assessment**: Real-time checking of pronunciation, fluency, and prosody (Azure Speech).
-- **Accent Coaching**: Comparison between Modern RP and General American.
-- **Imitation Challenges**: Interactive writing and speaking exercises.
+- **Linguistic Analysis**: Genre, subtext, lexical precision, and stylistic analysis (LLM-powered)
+- **Voice Assessment**: Real-time pronunciation, fluency, and prosody feedback (Azure Speech)
+- **Accent Coaching**: Modern RP (British) and General American
+- **Imitation Challenges**: Interactive writing and speaking exercises
 
 ## Quick Start
 

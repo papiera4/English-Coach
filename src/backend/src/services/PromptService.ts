@@ -32,8 +32,29 @@ export class PromptService {
     }
   }
 
+  private resolvePrompt(promptName: string, replacements: Record<string, string> = {}): string {
+    const filename = promptName.endsWith('.yaml') ? promptName : `${promptName}.yaml`;
+    const promptData = this.loadPrompt(filename);
+    let systemPrompt = promptData.system;
+    
+    for (const [key, value] of Object.entries(replacements)) {
+        // Replace {{KEY}} with value
+        systemPrompt = systemPrompt.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    }
+    
+    return systemPrompt;
+  }
+
+  getPrompt(promptName: string, replacements: Record<string, string> = {}): string {
+      return this.resolvePrompt(promptName, replacements);
+  }
+
   getAnalysisCoreSystemPrompt(): string {
     return this.loadPrompt('analysis_core.yaml').system;
+  }
+
+  getSpeakingEvaluationSystemPrompt(): string {
+      return this.loadPrompt('speaking_evaluation.yaml').system;
   }
 
   getAnalysisLexisSystemPrompt(): string {
@@ -55,4 +76,5 @@ export class PromptService {
   getInterChapterAnalysisSystemPrompt(): string {
     return this.loadPrompt('inter_chapter_analysis.yaml').system;
   }
+
 }

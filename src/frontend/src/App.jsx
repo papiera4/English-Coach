@@ -6,15 +6,19 @@ import AccentToggle from './components/AccentToggle';
 import InputForm from './components/InputForm';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import BookBrowser from './components/BookBrowser';
+import ChapterReader from './components/ChapterReader';
 
 function App() {
   const [accentMode, setAccentMode] = useState('modern-rp');
   const [currentText, setCurrentText] = useState('');
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('analyze'); // 'analyze' or 'imitate'
+  const [viewMode, setViewMode] = useState('analysis'); // 'analysis' | 'reader'
+  const [chapterSegments, setChapterSegments] = useState([]);
+  const [chapterAnalysis, setChapterAnalysis] = useState(null);
 
   const handleAnalyze = async (text) => {
+    setViewMode('analysis');
     setCurrentText(text);
     setLoading(true);
     try {
@@ -35,6 +39,7 @@ function App() {
   };
 
   const loadProcessedContent = (contentData) => {
+    setViewMode('analysis');
     // Determine the structure of contentData
     // If it comes from BookBrowser -> { id, text, analysis: { ... } }
     setCurrentText(contentData.text);
@@ -42,8 +47,18 @@ function App() {
     // The structure saved by offline processor matches linguisticAnalysisAgent output
     // but checks are good
     if (contentData.analysis) {
-      setAnalysis({ success: true, analysis: contentData.analysis });
+      setAnalysis({ 
+        success: true, 
+        analysis: contentData.analysis,
+        audioUrl: contentData.audioUrl // Pass the pre-generated audio URL
+      });
     }
+  };
+
+  const handleReadChapter = (segments, analysis) => {
+    setChapterSegments(segments);
+    setChapterAnalysis(analysis);
+    setViewMode('reader');
   };
 
   return (
@@ -75,7 +90,10 @@ function App() {
             
             {/* Library / Offline Browser */}
             <div className="flex-1 min-h-0 bg-transparent">
-               <BookBrowser onSelectContent={loadProcessedContent} />
+               <BookBrowser 
+                  onSelectContent={loadProcessedContent} 
+                  onReadChapter={handleReadChapter}
+               />
             </div>
           </div>
 
@@ -90,11 +108,15 @@ function App() {
               </div>
             )}
 
-            {!loading && analysis && (
+            {!loading && viewMode === 'reader' && (
+               <ChapterReader paragraphs={chapterSegments} analysis={chapterAnalysis} accentMode={accentMode} />
+            )}
+
+            {!loading && viewMode === 'analysis' && analysis && (
               <AnalysisDisplay analysis={analysis} accentMode={accentMode} currentText={currentText} />
             )}
 
-            {!loading && !analysis && (
+            {!loading && !analysis && viewMode !== 'reader' && (
               <div className="glass-effect rounded-lg p-12 text-center flex flex-col items-center justify-center h-full">
                 <BookOpen className="w-16 h-16 text-british-gold mb-4 opacity-50" />
                 <h3 className="text-xl font-serif text-british-navy mb-2">Welcome to English Coach</h3>

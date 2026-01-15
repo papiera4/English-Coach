@@ -9,8 +9,12 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
-        timeout: 300000, // 5 minutes proxy timeout to prevent ECONNRESET on long analysis
+        timeout: 300000,
         proxyTimeout: 300000,
+      },
+      '/content': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
       },
     },
   },

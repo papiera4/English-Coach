@@ -32,6 +32,7 @@ export const createApiRouter = (): Router => {
 
     // Audio Routes
     router.post('/assess-pronunciation', upload.single('audio'), (req, res) => audioController.assessPronunciation(req, res));
+    router.post('/evaluate-speaking', upload.single('audio'), (req, res) => audioController.evaluateSpeaking(req, res));
 
     // Health
     router.get('/health', (req: Request, res: Response) => {
